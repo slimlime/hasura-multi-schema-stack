@@ -107,6 +107,40 @@ services:
       HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
 
 
+  pg_4:
+    image: postgres:12
+    restart: always
+    ports:
+      - "5454:5432"
+    networks:
+      - pgnet4
+    volumes:
+      - pg_persist_4:/var/lib/postgresql/data
+      - pg_initdb_4:/var/lib/postgresql/waldir_log
+      - ./postgres-configs/postgresql.conf:/var/lib/postgresql/my_postgresql.conf
+    environment:
+      POSTGRES_PASSWORD: schema4
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      POSTGRES_INITDB_WALDIR: "/var/lib/postgresql/waldir_log"
+    command: "-c 'config_file=/var/lib/postgresql/my_postgresql.conf'"
+  gql_he4:
+    image: hasura/graphql-engine:v1.3.0
+    depends_on:
+      - "pg_4"
+    restart: always
+    ports:
+      - "8084:8080"
+    networks:
+      - pgnet4
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:schema4@pg_4:5432/postgres
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ENABLE_TELEMETRY: "false"
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"
+      HASURA_GRAPHQL_ADMIN_SECRET: "schema4"
+      HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
+
+
 volumes:
   pg_persist_1:
   pg_initdb_1:
@@ -117,6 +151,9 @@ volumes:
   pg_persist_3:
   pg_initdb_3:
 
+  pg_persist_4:
+  pg_initdb_4:
+
 networks:
   pgnet1:
     name: pgnet1
@@ -124,3 +161,5 @@ networks:
     name: pgnet2
   pgnet3:
     name: pgnet3
+  pgnet4:
+    name: pgnet4
