@@ -1,0 +1,59 @@
+version: "3.6"
+services:
+  # pg_1 postgres and hasura stack 1 for v1.1.4 hasura migrations test. May be troublesome using the old v1-style hasura?
+  pg_1:
+    image: postgres:12
+    restart: always
+    ports:
+      - "5451:5432"
+    networks:
+      - pgnet1
+    volumes:
+      - pg_persist_1:/var/lib/postgresql/data
+      - pg_initdb_1:/var/lib/postgresql/waldir_log
+      # Copy custom config
+      - ./postgres-configs/postgresql.conf:/var/lib/postgresql/my_postgresql.conf
+    environment:
+      POSTGRES_PASSWORD: schema1
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      POSTGRES_INITDB_WALDIR: "/var/lib/postgresql/waldir_log"
+    # Use custom config
+    command: "-c 'config_file=/var/lib/postgresql/my_postgresql.conf'"
+  # Check. May need to backtrack to use the older graphql-engine v1.1 or v1.2 to use v1 config instead of v2 config new style
+  gql_he1:
+    image: hasura/graphql-engine:v1.3.0
+    depends_on:
+      - "pg_1"
+    restart: always
+    ports:
+      - "8081:8080"
+    networks:
+      - pgnet1
+    environment:
+      # Internal docker network uses 5432. Port 5451 host binding is only exposed outside host for external callers (to run hasura migrate + metadata)
+      # pg_1 is the "hostname" of the pg_1 service internal container within this pg_1 network.
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:schema1@pg_1:5432/postgres
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ENABLE_TELEMETRY: "false"
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"
+      HASURA_GRAPHQL_ADMIN_SECRET: "schema1"
+      HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
+
+
+volumes:
+  pg_persist_1:
+  pg_initdb_1:
+
+  pg_persist_2:
+  pg_initdb_2:
+
+  pg_persist_3:
+  pg_initdb_3:
+
+networks:
+  pgnet1:
+    name: pgnet1
+  pgnet2:
+    name: pgnet2
+  pgnet3:
+    name: pgnet3
