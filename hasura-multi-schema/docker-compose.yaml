@@ -73,37 +73,37 @@ services:
       HASURA_GRAPHQL_ADMIN_SECRET: "schema2"
       HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
 
-  pg_2:
+  pg_3:
     image: postgres:12
     restart: always
     ports:
-      - "5452:5432"
+      - "5453:5432"
     networks:
-      - pgnet2
+      - pgnet3
     volumes:
-      - pg_persist_2:/var/lib/postgresql/data
-      - pg_initdb_2:/var/lib/postgresql/waldir_log
+      - pg_persist_3:/var/lib/postgresql/data
+      - pg_initdb_3:/var/lib/postgresql/waldir_log
       - ./postgres-configs/postgresql.conf:/var/lib/postgresql/my_postgresql.conf
     environment:
-      POSTGRES_PASSWORD: schema2
+      POSTGRES_PASSWORD: schema3
       POSTGRES_INITDB_ARGS: "--data-checksums"
       POSTGRES_INITDB_WALDIR: "/var/lib/postgresql/waldir_log"
     command: "-c 'config_file=/var/lib/postgresql/my_postgresql.conf'"
-  gql_he2:
+  gql_he3:
     image: hasura/graphql-engine:v1.3.0
     depends_on:
-      - "pg_2"
+      - "pg_3"
     restart: always
     ports:
-      - "8082:8080"
+      - "8083:8080"
     networks:
-      - pgnet2
+      - pgnet3
     environment:
-      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:schema2@pg_2:5432/postgres
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:schema3@pg_3:5432/postgres
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_ENABLE_TELEMETRY: "false"
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"
-      HASURA_GRAPHQL_ADMIN_SECRET: "schema2"
+      HASURA_GRAPHQL_ADMIN_SECRET: "schema3"
       HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
 
 
